@@ -41,6 +41,13 @@ __maintainer__ = 'Antons Rebguns'
 __email__ = 'anton@email.arizona.edu'
 
 
+import os
+import struct
+import mmap
+import ctypes
+
+import time
+
 import math
 
 import rospy
@@ -102,12 +109,15 @@ class JointController:
 
     def initialize(self):
         raise NotImplementedError
+    
+
 
     def start(self):
         self.running = True
         self.joint_state_pub = rospy.Publisher(self.controller_namespace + '/state', JointState, queue_size=None)
         self.command_sub = rospy.Subscriber(self.controller_namespace + '/command', Float64, self.process_command)
-        self.motor_states_sub = rospy.Subscriber('motor_states/%s' % self.port_namespace, MotorStateList, self.process_motor_states)
+        self.motor_states_sub = rospy.Subscriber('motor_states/%s' % self.port_namespace, MotorStateList, self.process_motor_states, None)
+        self.motor_states_sub.impl.add_callback(self.non_ros_shm_component, None)
 
     def stop(self):
         self.running = False
@@ -117,6 +127,24 @@ class JointController:
         self.speed_service.shutdown('normal shutdown')
         self.torque_service.shutdown('normal shutdown')
         self.compliance_slope_service.shutdown('normal shutdown')
+        
+    def non_ros_shm_component(self, state_list):      
+        state = filter(lambda state: state.id == self.motor_id, state_list.motor_states)
+        state = state[0]
+        fd = os.open('/tmp/SumoDev_shm', os.O_CREAT | os.O_APPEND | os.O_RDWR)
+        assert os.write(fd, '\x00'*mmap.PAGESIZE) == mmap.PAGESIZE
+        queue = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
+        c_pos = ctypes.c_float.from_buffer(queue)        
+        byte_offset_size = struct.calcsize(c_pos._type_)
+        c_pos_3 = ctypes.c_float.from_buffer(queue,byte_offset_size)
+        if self.motor_id == 1: 
+            c_pos.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
+            #print "At 1: %s "%time.clock()
+        elif self.motor_id == 3:          
+            c_pos_3.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)            
+            #print "At 3: %s "%time.clock()
+        #print struct.unpack('ff', queue[:8])        
+        os.close(fd)
 
     def set_torque_enable(self, torque_enable):
         raise NotImplementedError

@@ -163,6 +163,8 @@ class JointPositionController(JointController):
         if acc < 0: acc = 0
         elif acc > 254: acc = 254
         self.dxl_io.set_acceleration(self.motor_id, acc)
+        
+ 
 
     def process_motor_states(self, state_list):
         if self.running:

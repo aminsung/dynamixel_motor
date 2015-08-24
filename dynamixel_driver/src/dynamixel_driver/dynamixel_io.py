@@ -97,7 +97,7 @@ class DynamixelIO(object):
 
         try:
             data.extend(self.ser.read(4))
-            if not data[0:2] == ['\xff', '\xff']: raise Exception('Wrong packet prefix %s' % data[0:2])
+            if not data[0:2] == ['\xff', '\xff']: raise Exception('Wrong packet prefix %s' % data[0:2]) # Ensure that the packet starts correctly
             data.extend(self.ser.read(ord(data[3])))
             data = array('B', ''.join(data)).tolist() # [int(b2a_hex(byte), 16) for byte in data]
         except Exception, e:
