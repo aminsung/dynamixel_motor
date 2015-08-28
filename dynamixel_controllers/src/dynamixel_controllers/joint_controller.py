@@ -136,12 +136,18 @@ class JointController:
         queue = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         c_pos = ctypes.c_float.from_buffer(queue)        
         byte_offset_size = struct.calcsize(c_pos._type_)
-        c_pos_3 = ctypes.c_float.from_buffer(queue,byte_offset_size)
+        c_pos_2 = ctypes.c_float.from_buffer(queue,byte_offset_size)
+        c_pos_3 = ctypes.c_float.from_buffer(queue,byte_offset_size*2)
+        c_pos_4 = ctypes.c_float.from_buffer(queue,byte_offset_size*3)
         if self.motor_id == 1: 
             c_pos.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
             #print "At 1: %s "%time.clock()
-        elif self.motor_id == 3:          
-            c_pos_3.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)            
+        elif self.motor_id == 2:
+            c_pos_2.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
+        elif self.motor_id == 3:
+            c_pos_3.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
+        elif self.motor_id == 4:
+            c_pos_4.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
             #print "At 3: %s "%time.clock()
         #print struct.unpack('ff', queue[:8])        
         os.close(fd)
