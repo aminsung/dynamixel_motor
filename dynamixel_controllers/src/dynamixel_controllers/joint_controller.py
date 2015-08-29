@@ -129,8 +129,19 @@ class JointController:
         self.compliance_slope_service.shutdown('normal shutdown')
         
     def non_ros_shm_component(self, state_list):      
-        state = filter(lambda state: state.id == self.motor_id, state_list.motor_states)
+        #print "Time: %r" %time.clock()
+        #state = filter(lambda state: state.id == self.motor_id)
+        #state = filter(lambda state: state.id == self.motor_id, state_list.motor_states)
+        state = [state for state in state_list.motor_states if state.id == self.motor_id]
+        print "\n\n\nState 0:\n\n%r" %state
+        #print type(self.motor_id)
+        #print "\n\n\n"
+        #print "State 1: %r" %state[1]
         state = state[0]
+        #try:
+            #state = state[0]
+        #except:
+            #return
         fd = os.open('/tmp/SumoDev_shm', os.O_CREAT | os.O_APPEND | os.O_RDWR)
         assert os.write(fd, '\x00'*mmap.PAGESIZE) == mmap.PAGESIZE
         queue = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
@@ -141,15 +152,12 @@ class JointController:
         c_pos_4 = ctypes.c_float.from_buffer(queue,byte_offset_size*3)
         if self.motor_id == 1: 
             c_pos.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
-            #print "At 1: %s "%time.clock()
         elif self.motor_id == 2:
             c_pos_2.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
         elif self.motor_id == 3:
             c_pos_3.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
         elif self.motor_id == 4:
             c_pos_4.value = self.raw_to_rad(state.position, self.initial_position_raw, self.flipped, self.RADIANS_PER_ENCODER_TICK)
-            #print "At 3: %s "%time.clock()
-        #print struct.unpack('ff', queue[:8])        
         os.close(fd)
 
     def set_torque_enable(self, torque_enable):
