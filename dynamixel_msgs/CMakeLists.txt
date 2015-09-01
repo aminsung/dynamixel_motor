@@ -9,6 +9,7 @@ add_message_files(
   JointState.msg
   MotorState.msg
   MotorStateList.msg
+  MotorQuadSync.msg
 )
 
 generate_messages(

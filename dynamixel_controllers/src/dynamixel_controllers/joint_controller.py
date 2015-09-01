@@ -64,6 +64,7 @@ from dynamixel_controllers.srv import SetTorqueLimit
 from std_msgs.msg import Float64
 from dynamixel_msgs.msg import MotorStateList
 from dynamixel_msgs.msg import JointState
+from dynamixel_msgs.msg import MotorQuadSync
 
 class JointController:
     def __init__(self, dxl_io, controller_namespace, port_namespace):
@@ -116,14 +117,17 @@ class JointController:
         self.running = True
         self.joint_state_pub = rospy.Publisher(self.controller_namespace + '/state', JointState, queue_size=None)
         self.command_sub = rospy.Subscriber(self.controller_namespace + '/command', Float64, self.process_command)
+        self.sync_command_sub = rospy.Subscriber('quad_controller' + '/command', MotorQuadSync, self.process_command_multi_motors)
         self.motor_states_sub = rospy.Subscriber('motor_states/%s' % self.port_namespace, MotorStateList, self.process_motor_states, None)
-        self.motor_states_sub.impl.add_callback(self.non_ros_shm_component, None)
+        #self.motor_states_sub.impl.add_callback(self.non_ros_shm_component, None)
+        #print "Controllers Check: %s" %self.controller_namespace
 
     def stop(self):
         self.running = False
         self.joint_state_pub.unregister()
         self.motor_states_sub.unregister()
         self.command_sub.unregister()
+        self.sync_command_sub.unregister()
         self.speed_service.shutdown('normal shutdown')
         self.torque_service.shutdown('normal shutdown')
         self.compliance_slope_service.shutdown('normal shutdown')
@@ -133,15 +137,15 @@ class JointController:
         #state = filter(lambda state: state.id == self.motor_id)
         #state = filter(lambda state: state.id == self.motor_id, state_list.motor_states)
         state = [state for state in state_list.motor_states if state.id == self.motor_id]
-        print "\n\n\nState 0:\n\n%r" %state
-        #print type(self.motor_id)
-        #print "\n\n\n"
-        #print "State 1: %r" %state[1]
+        #print "\n\n\nState 0:\n\n%r" %state
+        
         state = state[0]
+        
         #try:
             #state = state[0]
         #except:
             #return
+            
         fd = os.open('/tmp/SumoDev_shm', os.O_CREAT | os.O_APPEND | os.O_RDWR)
         assert os.write(fd, '\x00'*mmap.PAGESIZE) == mmap.PAGESIZE
         queue = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
@@ -207,6 +211,9 @@ class JointController:
 
     def process_command(self, msg):
         raise NotImplementedError
+    
+    def process_command_multi_motors(self, raw_val):
+            raise NotImplementedError    
 
     def rad_to_raw(self, angle, initial_position_raw, flipped, encoder_ticks_per_radian):
         """ angle is in radians """
@@ -217,4 +224,3 @@ class JointController:
 
     def raw_to_rad(self, raw, initial_position_raw, flipped, radians_per_encoder_tick):
         return (initial_position_raw - raw if flipped else raw - initial_position_raw) * radians_per_encoder_tick
-

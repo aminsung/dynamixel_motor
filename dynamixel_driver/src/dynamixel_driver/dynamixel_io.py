@@ -725,18 +725,48 @@ class DynamixelIO(object):
         set_multi_position( ( (id1, position1), (id2, position2), (id3, position3) ) )
         """
         # prepare value tuples for call to syncwrite
+        # print len(valueTuples)
         writeableVals = []
 
         for vals in valueTuples:
+            #print len(vals)
             sid = vals[0]
             position = vals[1]
             # split position into 2 bytes
             loVal = int(position % 256)
             hiVal = int(position >> 8)
             writeableVals.append( (sid, loVal, hiVal) )
-
+            print len(writeableVals)
         # use sync write to broadcast multi servo message
+        #print len(writeableVals)
+        #print "================================="
         self.sync_write(DXL_GOAL_POSITION_L, writeableVals)
+        
+    def set_multi_position_multi_motors(self, value_list):
+        """
+        Set different positions for multiple servos.
+        Should be called as such:
+        set_multi_position( ( (id1, position1), (id2, position2), (id3, position3) ) )
+        """
+        # prepare value tuples for call to syncwrite
+        # print len(valueTuples)
+        #print value_list[0]
+        writeableVals = []
+        
+        #for vals in value_list:
+            #for idx in xrange(0,7,2):
+                #sid = vals[idx]
+                #position = vals[idx+1]
+                
+        print value_list
+        for idx in xrange(0,7,2):
+            motor_id = value_list[idx]
+            position = value_list[idx+1]
+            low_byte = int(position % 256)
+            high_byte = int(position >> 8)
+            writeableVals.append( (motor_id, low_byte, high_byte) )
+            
+        self.sync_write(DXL_GOAL_POSITION_L, writeableVals)        
 
     def set_multi_speed(self, valueTuples):
         """
@@ -760,7 +790,6 @@ class DynamixelIO(object):
                 hiVal = int((1023 - speed) >> 8)
 
             writeableVals.append( (sid, loVal, hiVal) )
-
         # use sync write to broadcast multi servo message
         self.sync_write(DXL_GOAL_SPEED_L, writeableVals)
 
