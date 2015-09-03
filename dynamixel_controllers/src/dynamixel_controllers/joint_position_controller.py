@@ -186,15 +186,15 @@ class JointPositionController(JointController):
         angle = msg.data
         mcv = (self.motor_id, self.pos_rad_to_raw(angle))
         #print mcv
-        #self.dxl_io.set_multi_position([mcv])
+        self.dxl_io.set_multi_position([mcv])
         
     def process_command_multi_motors(self, raw_val):
         # Sync Write Publisher Organizer
         #print "Raw Value: %r" %raw_val.motor_sync[0]
         mcv = ( (1, self.pos_rad_to_raw(raw_val.motor_sync[0])), (2, self.pos_rad_to_raw(raw_val.motor_sync[1])), \
                 (3, self.pos_rad_to_raw(raw_val.motor_sync[2])), (4, self.pos_rad_to_raw(raw_val.motor_sync[3])) )
-        print mcv
         #print mcv
+        #print type(mcv)
         #self.dxl_io.set_multi_position_multi_motors(mcv)
         #self.dxl_io.set_multi_position(mcv)
             

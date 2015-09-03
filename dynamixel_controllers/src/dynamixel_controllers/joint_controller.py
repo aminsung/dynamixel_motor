@@ -136,7 +136,7 @@ class JointController:
         #print "Time: %r" %time.clock()
         #state = filter(lambda state: state.id == self.motor_id)
         #state = filter(lambda state: state.id == self.motor_id, state_list.motor_states)
-        state = [state for state in state_list.motor_states if state.id == self.motor_id]
+        state = [state for state in state_list.motor_states if state.id == self.motor_id] # Dumb, don't use lambda+filter generators...
         #print "\n\n\nState 0:\n\n%r" %state
         
         state = state[0]

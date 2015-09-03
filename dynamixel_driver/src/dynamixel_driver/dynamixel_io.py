@@ -197,13 +197,15 @@ class DynamixelIO(object):
         """
         # Calculate length and sum of all data
         flattened = [value for servo in data for value in servo]
+        #print flattened
+        
 
         # Number of bytes following standard header (0xFF, 0xFF, id, length) plus data
         length = 4 + len(flattened)
 
         checksum = 255 - ((DXL_BROADCAST + length + \
                           DXL_SYNC_WRITE + address + len(data[0][1:]) + \
-                          sum(flattened)) % 256)
+                          sum(flattened)) % 256) #()254 + 12 + 131 + 30 + 2 + sum)%256
 
         # packet: FF  FF  ID LENGTH INSTRUCTION PARAM_1 ... CHECKSUM
         packet = [0xFF, 0xFF, DXL_BROADCAST, length, DXL_SYNC_WRITE, address, len(data[0][1:])]
@@ -211,6 +213,8 @@ class DynamixelIO(object):
         packet.append(checksum)
 
         packetStr = array('B', packet).tostring() # packetStr = ''.join([chr(byte) for byte in packet])
+        
+        #print repr(packetStr)
 
         with self.serial_mutex:
             self.__write_serial(packetStr)
@@ -736,10 +740,9 @@ class DynamixelIO(object):
             loVal = int(position % 256)
             hiVal = int(position >> 8)
             writeableVals.append( (sid, loVal, hiVal) )
-            print len(writeableVals)
-        # use sync write to broadcast multi servo message
+            #print len(writeableVals)
         #print len(writeableVals)
-        #print "================================="
+        # use sync write to broadcast multi servo message
         self.sync_write(DXL_GOAL_POSITION_L, writeableVals)
         
     def set_multi_position_multi_motors(self, value_list):
