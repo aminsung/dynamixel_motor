@@ -731,6 +731,8 @@ class DynamixelIO(object):
         # prepare value tuples for call to syncwrite
         # print len(valueTuples)
         writeableVals = []
+        #print type(valueTuples)
+        #print valueTuples
 
         for vals in valueTuples:
             #print len(vals)
