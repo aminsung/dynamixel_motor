@@ -119,7 +119,7 @@ class JointController:
         self.command_sub = rospy.Subscriber(self.controller_namespace + '/command', Float64, self.process_command)
         self.sync_command_sub = rospy.Subscriber('quad_controller' + '/command', MotorQuadSync, self.process_command_multi_motors)
         self.motor_states_sub = rospy.Subscriber('motor_states/%s' % self.port_namespace, MotorStateList, self.process_motor_states, None)
-        #self.motor_states_sub.impl.add_callback(self.non_ros_shm_component, None)
+        self.motor_states_sub.impl.add_callback(self.non_ros_shm_component, None)
         #print "Controllers Check: %s" %self.controller_namespace
 
     def stop(self):
